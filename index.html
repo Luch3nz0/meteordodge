@@ -15,8 +15,39 @@
         <div id="main-menu">
             <h1>Meteor Dodge</h1>
             <button id="normal-mode">Normal Mode</button>
-            <button id="mode-2" disabled>Mode 2 (Under Construction)</button>
-            <button id="mode-3" disabled>Mode 3 (Under Construction)</button>
+            <button id="mode-2">Mode 2 (Under Construction)</button>
+            <button id="mode-3">Mode 3 (Under Construction)</button>
+            <button id="skins-button" class="game-button">Skins</button>
+        </div>
+        <div id="skins-menu" style="display: none;">
+            <h2>Skins Collection</h2>
+            <div id="skins-grid">
+                <div class="skin-item">
+                    <div class="skin-preview default-skin" data-skin="default">
+                        <div class="skin-square"></div>
+                    </div>
+                    <p>Default</p>
+                </div>
+                <div class="skin-item">
+                    <div class="skin-preview normal-skin" data-skin="normal">
+                        <div class="skin-square"></div>
+                    </div>
+                    <p>Normal Champion</p>
+                </div>
+                <div class="skin-item">
+                    <div class="skin-preview icy-skin" data-skin="icy">
+                        <div class="skin-square"></div>
+                    </div>
+                    <p>Ice Master</p>
+                </div>
+                <div class="skin-item">
+                    <div class="skin-preview insane-skin" data-skin="insane">
+                        <div class="skin-square"></div>
+                    </div>
+                    <p>Insanity King</p>
+                </div>
+            </div>
+            <button id="back-to-menu" class="game-button">Back to Menu</button>
         </div>
         <div id="game-over">
             <h2>Game Over!</h2>

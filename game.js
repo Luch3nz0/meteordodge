@@ -11,6 +11,9 @@ const mainMenu = document.getElementById('main-menu');
 const normalModeButton = document.getElementById('normal-mode');
 const mode2Button = document.getElementById('mode-2');
 const mode3Button = document.getElementById('mode-3');
+const skinsButton = document.getElementById('skins-button');
+const skinsMenu = document.getElementById('skins-menu');
+const backToMenuButton = document.getElementById('back-to-menu');
 
 // Skin unlock thresholds (in seconds)
 const SKIN_UNLOCK_TIMES = {
@@ -28,6 +31,9 @@ const SKIN_COLORS = {
 
 // Load unlocked skins from localStorage
 let unlockedSkins = JSON.parse(localStorage.getItem('unlockedSkins') || '{}');
+
+// Load selected skin from localStorage
+let selectedSkin = localStorage.getItem('selectedSkin') || 'default';
 
 // Add button classes
 [normalModeButton, mode2Button, mode3Button].forEach(button => {
@@ -59,23 +65,76 @@ let playerMomentum = 0;
 const MOMENTUM_DECAY = 0.95;
 const MAX_MOMENTUM = 15;
 
+// Skin management
+function updateSkinsDisplay() {
+    const skinPreviews = document.querySelectorAll('.skin-preview');
+    skinPreviews.forEach(preview => {
+        const skinType = preview.dataset.skin;
+        // Add locked class if skin is not unlocked (except default)
+        if (skinType !== 'default' && !unlockedSkins[skinType]) {
+            preview.classList.add('locked');
+        } else {
+            preview.classList.remove('locked');
+        }
+        
+        // Add selected class to current skin
+        if (skinType === selectedSkin) {
+            preview.classList.add('selected');
+        } else {
+            preview.classList.remove('selected');
+        }
+    });
+}
+
+// Add click handlers for skin selection
+document.querySelectorAll('.skin-preview').forEach(preview => {
+    preview.addEventListener('click', () => {
+        const skinType = preview.dataset.skin;
+        if (skinType === 'default' || unlockedSkins[skinType]) {
+            selectedSkin = skinType;
+            localStorage.setItem('selectedSkin', selectedSkin);
+            updateSkinsDisplay();
+            // Update player color immediately if in game
+            updatePlayerSkin();
+        }
+    });
+});
+
+// Function to update player skin
+function updatePlayerSkin() {
+    if (selectedSkin === 'default') {
+        player.style.backgroundColor = '#fff';
+    } else {
+        player.style.backgroundColor = SKIN_COLORS[selectedSkin];
+    }
+}
+
+// Show skins menu
+skinsButton.addEventListener('click', () => {
+    mainMenu.style.display = 'none';
+    skinsMenu.style.display = 'flex';
+    updateSkinsDisplay();
+});
+
+// Back to main menu
+backToMenuButton.addEventListener('click', () => {
+    skinsMenu.style.display = 'none';
+    mainMenu.style.display = 'flex';
+});
+
 // Initialize game
 function initGame(mode = 'normal') {
     currentGameMode = mode;
     playerPosition = gameContainer.offsetWidth / 2;
     player.style.left = `${playerPosition}px`;
     
-    // Apply skin if unlocked for current mode
-    if (unlockedSkins[mode]) {
-        player.style.backgroundColor = SKIN_COLORS[mode];
-    } else {
-        player.style.backgroundColor = '#fff'; // Default white
-    }
+    // Apply selected skin
+    updatePlayerSkin();
     
     timer = 0;
     meteors = [];
-    meteorSpeed = mode === 'insane' ? 3 : 2; // Faster base speed for insane mode
-    meteorGenerationSpeed = mode === 'insane' ? 1000 : 1200; // Faster generation for insane mode
+    meteorSpeed = mode === 'insane' ? 3 : 2;
+    meteorGenerationSpeed = mode === 'insane' ? 1000 : 1200;
     lastSpeedIncrease = 0;
     playerMomentum = 0;
     removeAllMeteors();
@@ -83,8 +142,9 @@ function initGame(mode = 'normal') {
     updateBestTimeDisplay();
     gameActive = true;
     
-    // Hide menu and game over screen
+    // Hide menus
     mainMenu.style.display = 'none';
+    skinsMenu.style.display = 'none';
     gameOverScreen.style.display = 'none';
     
     // Set theme based on mode
@@ -134,10 +194,7 @@ function updateBestTimeDisplay() {
     const modeText = currentGameMode.charAt(0).toUpperCase() + currentGameMode.slice(1);
     let displayText = `${modeText} Mode Best: ${currentBest.toFixed(1)}s`;
     
-    // Add unlock threshold info if skin not unlocked
-    if (!unlockedSkins[currentGameMode]) {
-        displayText += `\nSurvive ${SKIN_UNLOCK_TIMES[currentGameMode]}s to unlock special skin!`;
-    }
+    
     
     bestTimeDisplay.textContent = displayText;
 }
@@ -145,6 +202,7 @@ function updateBestTimeDisplay() {
 // Show main menu
 function showMainMenu() {
     mainMenu.style.display = 'flex';
+    skinsMenu.style.display = 'none';
     gameOverScreen.style.display = 'none';
     gameActive = false;
     removeAllMeteors();
@@ -167,25 +225,37 @@ function removeAllMeteors() {
 function generateMeteor() {
     if (!gameActive) return;
     
-    const meteorSize = 30;
-    // Random position from left to right
-    const positionX = Math.random() * (gameContainer.offsetWidth - meteorSize);
+    // Random size between 15 and 40 pixels
+    const baseSize = 15 + Math.random() * 25;
     
-    // Start from top but outside the visible area
-    const positionY = -meteorSize;
+    // Random position from left to right
+    const positionX = Math.random() * (gameContainer.offsetWidth - baseSize);
+    const positionY = -baseSize;
     
     // Random angle (diagonal)
-    // Value between -1 (moving left) and 1 (moving right)
     const angleX = Math.random() * 2 - 1;
     
     const meteor = document.createElement('div');
     meteor.className = 'meteor';
+    
+    // Set random size
+    meteor.style.width = `${baseSize}px`;
+    meteor.style.height = `${baseSize}px`;
+    
+    // Set random rotation
+    const rotation = Math.random() * 360;
+    
+    // Generate random border radius for each corner to create irregular shapes
+    const topLeft = 30 + Math.random() * 70;
+    const topRight = 30 + Math.random() * 70;
+    const bottomLeft = 30 + Math.random() * 70;
+    const bottomRight = 30 + Math.random() * 70;
+    
+    meteor.style.borderRadius = `${topLeft}% ${100-topLeft}% ${bottomRight}% ${100-bottomRight}% / ${topRight}% ${bottomLeft}% ${100-bottomLeft}% ${100-topRight}%`;
+    meteor.style.transform = `rotate(${rotation}deg)`;
+    
     meteor.style.left = `${positionX}px`;
     meteor.style.top = `${positionY}px`;
-    
-    // Random meteor size variation
-    const scale = 0.8 + Math.random() * 0.6; // 0.8 to 1.4
-    meteor.style.transform = `scale(${scale})`;
     
     gameContainer.appendChild(meteor);
     
@@ -202,7 +272,7 @@ function generateMeteor() {
         positionX: positionX,
         positionY: positionY,
         angleX: angleX * meteorSpeed * 0.8,
-        scale: scale,
+        scale: baseSize / 20, // normalize scale based on size
         ...insaneProps
     });
 }
@@ -401,10 +471,23 @@ function endGame() {
         unlockedSkins[currentGameMode] = true;
         localStorage.setItem('unlockedSkins', JSON.stringify(unlockedSkins));
         
-        // Create and show unlock notification
+        // Create and show unlock notification with custom message per mode
         const unlockNotification = document.createElement('div');
         unlockNotification.className = 'unlock-notification';
-        unlockNotification.textContent = 'Congrats! You\'ve unlocked a new skin!';
+        
+        // Set custom message based on mode
+        switch(currentGameMode) {
+            case 'normal':
+                unlockNotification.textContent = 'You rock! Check this new skin out!';
+                break;
+            case 'icy':
+                unlockNotification.textContent = 'You\'re too cool for school! Here\'s a new skin!';
+                break;
+            case 'insane':
+                unlockNotification.textContent = 'You\'re insane dudeee! Here\'s an awesome skin for you!';
+                break;
+        }
+        
         gameContainer.appendChild(unlockNotification);
         
         // Remove notification after 3 seconds
