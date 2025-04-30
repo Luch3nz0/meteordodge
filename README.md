@@ -6,4 +6,4 @@ Dodge deadly meteors raining from above for as long as you can in this action-pa
 
 It's fast. It's frantic. It's fun. One second you’re alive… the next? Cosmic toast. 🌌🔥
 
-Are you ready to dance between death rocks and claim your place among the stars? Play Meteor Dodge and let the sky games begin!
+Are you ready to dance between death rocks and claim your place among the stars? Play Meteor Dodge on mobile or pc and let the sky games begin!
