@@ -12,6 +12,23 @@ const normalModeButton = document.getElementById('normal-mode');
 const mode2Button = document.getElementById('mode-2');
 const mode3Button = document.getElementById('mode-3');
 
+// Skin unlock thresholds (in seconds)
+const SKIN_UNLOCK_TIMES = {
+    normal: 60,
+    icy: 60,
+    insane: 60
+};
+
+// Skin colors for each mode
+const SKIN_COLORS = {
+    normal: '#32CD32',  // Lime green
+    icy: '#FFD700',     // Gold
+    insane: '#800080'   // Purple
+};
+
+// Load unlocked skins from localStorage
+let unlockedSkins = JSON.parse(localStorage.getItem('unlockedSkins') || '{}');
+
 // Add button classes
 [normalModeButton, mode2Button, mode3Button].forEach(button => {
     button.classList.add('game-button');
@@ -46,7 +63,15 @@ const MAX_MOMENTUM = 15;
 function initGame(mode = 'normal') {
     currentGameMode = mode;
     playerPosition = gameContainer.offsetWidth / 2;
-    player.style.left = `${playerPosition - playerWidth / 2}px`;
+    player.style.left = `${playerPosition}px`;
+    
+    // Apply skin if unlocked for current mode
+    if (unlockedSkins[mode]) {
+        player.style.backgroundColor = SKIN_COLORS[mode];
+    } else {
+        player.style.backgroundColor = '#fff'; // Default white
+    }
+    
     timer = 0;
     meteors = [];
     meteorSpeed = mode === 'insane' ? 3 : 2; // Faster base speed for insane mode
@@ -107,7 +132,14 @@ function initGame(mode = 'normal') {
 function updateBestTimeDisplay() {
     const currentBest = bestScores[currentGameMode];
     const modeText = currentGameMode.charAt(0).toUpperCase() + currentGameMode.slice(1);
-    bestTimeDisplay.textContent = `${modeText} Mode Best: ${currentBest.toFixed(1)}s`;
+    let displayText = `${modeText} Mode Best: ${currentBest.toFixed(1)}s`;
+    
+    // Add unlock threshold info if skin not unlocked
+    if (!unlockedSkins[currentGameMode]) {
+        displayText += `\nSurvive ${SKIN_UNLOCK_TIMES[currentGameMode]}s to unlock special skin!`;
+    }
+    
+    bestTimeDisplay.textContent = displayText;
 }
 
 // Show main menu
@@ -264,32 +296,15 @@ function interpolateColor(start, end, progress) {
 
 // Check collision between meteor and player
 function checkCollision(meteor) {
-    const meteorSize = 30 * meteor.scale;
-    
-    // Get the actual rendered positions
+    // Get the actual rendered positions and sizes
     const playerRect = player.getBoundingClientRect();
-    const meteorElement = meteor.element.getBoundingClientRect();
-    
-    // Calculate centers
-    const meteorCenter = {
-        x: meteorElement.left + meteorElement.width / 2,
-        y: meteorElement.top + meteorElement.height / 2
-    };
-    
-    const playerCenter = {
-        x: playerRect.left + playerRect.width / 2,
-        y: playerRect.top + playerRect.height / 2
-    };
-    
-    // Calculate distance between centers
-    const dx = meteorCenter.x - playerCenter.x;
-    const dy = meteorCenter.y - playerCenter.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // Use 80% of the actual size for more precise collision
-    const collisionThreshold = (meteorSize + playerWidth) * 0.4;
-    
-    return distance < collisionThreshold;
+    const meteorRect = meteor.element.getBoundingClientRect();
+
+    // Check for rectangle overlap using actual coordinates
+    return !(playerRect.right < meteorRect.left || 
+             playerRect.left > meteorRect.right || 
+             playerRect.bottom < meteorRect.top || 
+             playerRect.top > meteorRect.bottom);
 }
 
 // Move player function
@@ -308,12 +323,14 @@ function movePlayer(direction, multiplier = 1) {
         playerMomentum *= MOMENTUM_DECAY;
     }
     
-    // Keep player within bounds
-    const minPosition = playerWidth / 2;
-    const maxPosition = gameContainer.offsetWidth - playerWidth / 2;
+    // Keep player within bounds using actual player element width
+    const playerRect = player.getBoundingClientRect();
+    const containerRect = gameContainer.getBoundingClientRect();
+    const minPosition = 0;
+    const maxPosition = containerRect.width - playerRect.width;
     playerPosition = Math.max(minPosition, Math.min(playerPosition, maxPosition));
     
-    player.style.left = `${playerPosition - playerWidth / 2}px`;
+    player.style.left = `${playerPosition}px`;
 }
 
 // Game loop
@@ -378,6 +395,23 @@ function endGame() {
     gameActive = false;
     clearInterval(meteorGenerationInterval);
     cancelAnimationFrame(animationFrameId);
+    
+    // Check for skin unlock
+    if (timer >= SKIN_UNLOCK_TIMES[currentGameMode] && !unlockedSkins[currentGameMode]) {
+        unlockedSkins[currentGameMode] = true;
+        localStorage.setItem('unlockedSkins', JSON.stringify(unlockedSkins));
+        
+        // Create and show unlock notification
+        const unlockNotification = document.createElement('div');
+        unlockNotification.className = 'unlock-notification';
+        unlockNotification.textContent = 'Congrats! You\'ve unlocked a new skin!';
+        gameContainer.appendChild(unlockNotification);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+            unlockNotification.remove();
+        }, 3000);
+    }
     
     // Update best time for current mode
     if (timer > bestScores[currentGameMode]) {
