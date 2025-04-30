@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meteor Dodge Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="sky"></div>
+        <div id="ground"></div>
+        <div id="timer">Time: 0.0s</div>
+        <div id="player"></div>
+        <div id="main-menu">
+            <h1>Meteor Dodge</h1>
+            <button id="normal-mode">Normal Mode</button>
+            <button id="mode-2" disabled>Mode 2 (Under Construction)</button>
+            <button id="mode-3" disabled>Mode 3 (Under Construction)</button>
+        </div>
+        <div id="game-over">
+            <h2>Game Over!</h2>
+            <p id="final-time">You survived: 0.0s</p>
+            <p id="best-time">Best time: 0.0s</p>
+            <button id="retry-button">Retry</button>
+            <button id="menu-button">Back to Menu</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
