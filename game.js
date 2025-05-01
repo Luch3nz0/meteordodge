@@ -65,6 +65,12 @@ let playerMomentum = 0;
 const MOMENTUM_DECAY = 0.95;
 const MAX_MOMENTUM = 15;
 
+// Add key state tracking
+const keyState = {
+    ArrowLeft: false,
+    ArrowRight: false
+};
+
 // Skin management
 function updateSkinsDisplay() {
     const skinPreviews = document.querySelectorAll('.skin-preview');
@@ -411,6 +417,14 @@ function gameLoop(timestamp) {
     timer += 1/60;
     updateTimer();
     
+    // Handle continuous movement based on key state
+    if (keyState.ArrowLeft) {
+        movePlayer(-1);
+    }
+    if (keyState.ArrowRight) {
+        movePlayer(1);
+    }
+    
     // Check if it's time to increase speed
     if (timer - lastSpeedIncrease >= 10) {
         meteorSpeed += currentGameMode === 'insane' ? 0.7 : 0.5;
@@ -508,17 +522,18 @@ function endGame() {
     gameOverScreen.style.display = 'flex';
 }
 
-// Event listeners for keyboard controls
+// Replace keyboard event listeners
 document.addEventListener('keydown', (e) => {
     if (!gameActive) return;
     
-    switch (e.key) {
-        case 'ArrowLeft':
-            movePlayer(-1);
-            break;
-        case 'ArrowRight':
-            movePlayer(1);
-            break;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        keyState[e.key] = true;
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        keyState[e.key] = false;
     }
 });
 
